@@ -12,6 +12,7 @@ git clone https://github.com/rsennrich/subword-nmt.git
 
 echo 'Cloning SacreBLEU repository (for newstest data download)'
 git clone https://github.com/mjpost/sacrebleu.git
+pip install sacrebleu
 
 SCRIPTS=$WD/mosesdecoder/scripts
 TOKENIZER=$SCRIPTS/tokenizer/tokenizer.perl
