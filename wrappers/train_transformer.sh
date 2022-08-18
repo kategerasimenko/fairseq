@@ -230,8 +230,7 @@ for current_task in $TASKS; do
                 --label-smoothing $LABEL_SMOOTHING \
                 --max-tokens $MAX_TOKENS \
                 --eval-bleu \
-#                 --eval-bleu-args '{\"beam\": $VALID_BEAM_SIZE, \"max_len_a\": $VALID_MAX_LEN_A, \"max_len_b\": $VALID_MAX_LEN_B, \"lenpen\": $VALID_LENPEN}' \
-                --eval-bleu-args '{"beam": $VALID_BEAM_SIZE, "max_len_a": $VALID_MAX_LEN_A, "max_len_b": $VALID_MAX_LEN_B, "lenpen": $VALID_LENPEN}' \
+                --eval-bleu-args '{"beam":'$VALID_BEAM_SIZE',"max_len_a":'$VALID_MAX_LEN_A',"max_len_b":'$VALID_MAX_LEN_B',"lenpen":'$VALID_LENPEN'}' \
                 --eval-bleu-detok moses \
                 --eval-bleu-remove-bpe \
                 --eval-bleu-print-samples \
