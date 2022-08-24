@@ -14,6 +14,7 @@ from torch.nn import Parameter
 from fairseq.incremental_decoding_utils import with_incremental_state
 from fairseq.modules.quant_noise import quant_noise
 
+from .relative_positional_encoding import RelEncoding
 
 @with_incremental_state
 class MultiheadAttention(nn.Module):
@@ -36,6 +37,7 @@ class MultiheadAttention(nn.Module):
         encoder_decoder_attention=False,
         q_noise=0.0,
         qn_block_size=8,
+        maximum_relative_position=None
     ):
         super().__init__()
         self.embed_dim = embed_dim
@@ -63,6 +65,10 @@ class MultiheadAttention(nn.Module):
         self.q_proj = quant_noise(nn.Linear(embed_dim, embed_dim, bias=bias), q_noise, qn_block_size)
 
         self.out_proj = quant_noise(nn.Linear(embed_dim, embed_dim, bias=bias), q_noise, qn_block_size)
+
+        if self.self_attention:
+            self.k_rel_proj = RelEncoding(maximum_relative_position, self.head_dim)
+            self.v_rel_proj = RelEncoding(maximum_relative_position, self.head_dim)
 
         if add_bias_kv:
             self.bias_k = Parameter(torch.Tensor(1, 1, embed_dim))
@@ -315,6 +321,9 @@ class MultiheadAttention(nn.Module):
                 )
 
         attn_weights = torch.bmm(q, k.transpose(1, 2))
+        if self.self_attention:
+            attn_weights += self.k_rel_proj(q, max_seq_len=tgt_len, transpose_weight=True)
+
         attn_weights = MultiheadAttention.apply_sparse_mask(attn_weights, tgt_len, src_len, bsz)
 
         assert list(attn_weights.size()) == [bsz * self.num_heads, tgt_len, src_len]
@@ -353,6 +362,10 @@ class MultiheadAttention(nn.Module):
         )
         assert v is not None
         attn = torch.bmm(attn_probs, v)
+
+        if self.self_attention:
+            attn += self.v_rel_proj(attn_probs, max_seq_len=tgt_len, transpose_weight=False)
+
         assert list(attn.size()) == [bsz * self.num_heads, tgt_len, self.head_dim]
         if self.onnx_trace and attn.size(1) == 1:
             # when ONNX tracing a single decoder step (sequence length == 1)

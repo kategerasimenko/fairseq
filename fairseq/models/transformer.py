@@ -944,6 +944,7 @@ def base_architecture(args):
     args.no_scale_embedding = getattr(args, "no_scale_embedding", False)
     args.layernorm_embedding = getattr(args, "layernorm_embedding", False)
     args.tie_adaptive_weights = getattr(args, "tie_adaptive_weights", False)
+    args.maximum_relative_position = getattr(args, "maximum_relative_position", None)
 
 
 @register_model_architecture("transformer", "transformer_iwslt_de_en")

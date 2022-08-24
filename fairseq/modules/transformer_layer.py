@@ -32,6 +32,7 @@ class TransformerEncoderLayer(nn.Module):
     def __init__(self, args):
         super().__init__()
         self.embed_dim = args.encoder_embed_dim
+        self.maximum_relative_position = args.maximum_relative_position
         self.quant_noise = getattr(args, "quant_noise_pq", 0)
         self.quant_noise_block_size = getattr(args, "quant_noise_pq_block_size", 8)
         self.self_attn = self.build_self_attention(self.embed_dim, args)
@@ -68,6 +69,7 @@ class TransformerEncoderLayer(nn.Module):
             self_attention=True,
             q_noise=self.quant_noise,
             qn_block_size=self.quant_noise_block_size,
+            maximum_relative_position=self.maximum_relative_position
         )
 
     def upgrade_state_dict_named(self, state_dict, name):
@@ -229,6 +231,7 @@ class TransformerDecoderLayer(nn.Module):
             self_attention=not getattr(args, "cross_self_attention", False),
             q_noise=self.quant_noise,
             qn_block_size=self.quant_noise_block_size,
+            maximum_relative_position=args.maximum_relative_position
         )
 
     def build_encoder_attention(self, embed_dim, args):
