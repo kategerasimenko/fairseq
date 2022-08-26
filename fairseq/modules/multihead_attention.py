@@ -194,6 +194,8 @@ class MultiheadAttention(nn.Module):
         else:
             saved_state = None
 
+        with_saved_state = saved_state is not None
+
         if self.self_attention:
             q = self.q_proj(query)
             k = self.k_proj(query)
@@ -250,7 +252,7 @@ class MultiheadAttention(nn.Module):
                 .transpose(0, 1)
             )
 
-        if saved_state is not None:
+        if with_saved_state:
             # saved states are stored with shape (bsz, num_heads, seq_len, head_dim)
             if "prev_key" in saved_state:
                 _prev_key = saved_state["prev_key"]
@@ -322,7 +324,12 @@ class MultiheadAttention(nn.Module):
 
         attn_weights = torch.bmm(q, k.transpose(1, 2))
         if self.self_attention:
-            attn_weights += self.k_rel_proj(q, max_seq_len=tgt_len, transpose_weight=True)
+            attn_weights += self.k_rel_proj(
+                q,
+                max_seq_len=tgt_len,
+                transpose_weight=True,
+                with_saved_state=with_saved_state
+            )
 
         attn_weights = MultiheadAttention.apply_sparse_mask(attn_weights, tgt_len, src_len, bsz)
 
@@ -364,7 +371,12 @@ class MultiheadAttention(nn.Module):
         attn = torch.bmm(attn_probs, v)
 
         if self.self_attention:
-            attn += self.v_rel_proj(attn_probs, max_seq_len=tgt_len, transpose_weight=False)
+            attn += self.v_rel_proj(
+                attn_probs,
+                max_seq_len=tgt_len,
+                transpose_weight=False,
+                with_saved_state=with_saved_state
+            )
 
         assert list(attn.size()) == [bsz * self.num_heads, tgt_len, self.head_dim]
         if self.onnx_trace and attn.size(1) == 1:
