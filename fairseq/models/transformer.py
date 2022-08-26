@@ -172,6 +172,8 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='block size of quantization noise at training time')
         parser.add_argument('--quant-noise-scalar', type=float, metavar='D', default=0,
                             help='scalar quantization noise and scalar quantization at training time')
+        parser.add_argument('--maximum-relative-position', type=int, default=None,
+                            help='maximum relative distance to consider for relative positional encoding')
         # fmt: on
 
     @classmethod
