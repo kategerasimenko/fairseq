@@ -326,7 +326,7 @@ class MultiheadAttention(nn.Module):
         if self.self_attention:
             attn_weights += self.k_rel_proj(
                 q,
-                max_seq_len=tgt_len,
+                max_seq_len=src_len,
                 transpose_weight=True,
                 with_saved_state=with_saved_state
             )
@@ -373,7 +373,7 @@ class MultiheadAttention(nn.Module):
         if self.self_attention:
             attn += self.v_rel_proj(
                 attn_probs,
-                max_seq_len=tgt_len,
+                max_seq_len=src_len,
                 transpose_weight=False,
                 with_saved_state=with_saved_state
             )
