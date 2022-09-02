@@ -109,6 +109,10 @@ class MultiheadAttention(nn.Module):
         if self.bias_v is not None:
             nn.init.xavier_normal_(self.bias_v)
 
+        if self.self_attention:
+            torch.nn.init.xavier_uniform_(self.k_rel_proj.weight)
+            torch.nn.init.xavier_uniform_(self.v_rel_proj.weight)
+
     def forward(
         self,
         query,

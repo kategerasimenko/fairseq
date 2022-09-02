@@ -245,7 +245,8 @@ for current_task in $TASKS; do
                 --decoder-layers $DEPTH \
                 --encoder-embed-dim $EMB_SIZE \
                 --encoder-ffn-embed-dim $FFN_SIZE \
-                --save-interval-updates $SAVE_EVERY_N_UPDATES
+                --save-interval-updates $SAVE_EVERY_N_UPDATES \
+                --maximum-relative-position 16
 #                 ")
 
 #     jid=`echo $jid | cut -d" " -f3`
