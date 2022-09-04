@@ -89,7 +89,6 @@ GPUS=1
 
 TOKENIZER=mosesdecoder/scripts/tokenizer/tokenizer.perl
 DETOKENIZER=mosesdecoder/scripts/tokenizer/detokenizer.perl
-SERIES_AVG=my_scripts/average_dynamic_series.py
 
 TRANSLATION_OPT="-s $SRC -t $TGT --beam $BEAM_SIZE --lenpen $LENPEN --bpe subword_nmt --bpe-codes $EVAL_DIR/bpecodes $TRANSLATION_OPT"
 
@@ -115,11 +114,6 @@ function evaluate {
     msg "Evaluating $_file.hyps.detok.txt..."
     sacrebleu --input $RESULTS_DIR/$_file.hyps.detok.txt $EVAL_DIR/${_file}.$TGT > $RESULTS_DIR/${_file}.eval_out
 
-    # extract and agregate EOS emission probs
-    grep 'eos-lprobs' $RESULTS_DIR/$_file.txt \
-        | cut -f2 \
-        | $SERIES_AVG \
-        > $RESULTS_DIR/${_file}.eos_lprobs
 }
 
 function translate {
