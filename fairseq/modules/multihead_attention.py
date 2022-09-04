@@ -66,7 +66,9 @@ class MultiheadAttention(nn.Module):
 
         self.out_proj = quant_noise(nn.Linear(embed_dim, embed_dim, bias=bias), q_noise, qn_block_size)
 
-        if self.self_attention:
+        self.relative = maximum_relative_position is not None
+
+        if self.self_attention and self.relative:
             self.k_rel_proj = RelEncoding(maximum_relative_position, self.head_dim)
             self.v_rel_proj = RelEncoding(maximum_relative_position, self.head_dim)
 
@@ -109,7 +111,7 @@ class MultiheadAttention(nn.Module):
         if self.bias_v is not None:
             nn.init.xavier_normal_(self.bias_v)
 
-        if self.self_attention:
+        if self.self_attention and self.relative:
             torch.nn.init.xavier_uniform_(self.k_rel_proj.weight)
             torch.nn.init.xavier_uniform_(self.v_rel_proj.weight)
 
@@ -327,7 +329,7 @@ class MultiheadAttention(nn.Module):
                 )
 
         attn_weights = torch.bmm(q, k.transpose(1, 2))
-        if self.self_attention:
+        if self.self_attention and self.relative:
             attn_weights += self.k_rel_proj(
                 q,
                 max_seq_len=src_len,
@@ -374,7 +376,7 @@ class MultiheadAttention(nn.Module):
         assert v is not None
         attn = torch.bmm(attn_probs, v)
 
-        if self.self_attention:
+        if self.self_attention and self.relative:
             attn += self.v_rel_proj(
                 attn_probs,
                 max_seq_len=src_len,
