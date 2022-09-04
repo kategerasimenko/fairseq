@@ -6,6 +6,7 @@
 import torch
 import unittest
 from fairseq.modules.multihead_attention import MultiheadAttention
+from fairseq.modules.relative_positional_encoding import RelEncoding
 
 
 class TestMultiheadAttention(unittest.TestCase):
@@ -54,6 +55,31 @@ class TestMultiheadAttention(unittest.TestCase):
                 self.assertEqual(key_padding_mask.size(1), src_len)
             else:
                 self.assertIsNone(c[2])
+
+    def test_relative_positions(self):
+        positions = RelEncoding(max_relative_position=2, num_units=2)._relative_positions(4)
+        self.assertEqual(positions, [[2, 3, 4, 4], [1, 2, 3, 4], [0, 1, 2, 3], [0, 0, 1, 2]])
+
+    def test_attention_with_relative_positions(self):
+        def sequence_mask(lengths, maxlen=None, dtype=torch.bool):
+            if maxlen is None:
+                maxlen = lengths.max()
+            row_vector = torch.arange(0, maxlen, 1)
+            matrix = torch.unsqueeze(lengths, dim=-1)
+            mask = row_vector < matrix
+            mask.type(dtype)
+            return mask
+
+        attention = MultiheadAttention(4, 20, maximum_relative_position=6)
+        x = torch.rand([2, 9, 10])
+        mask = sequence_mask([9, 7])
+        y = attention(x, mask=mask)
+
+    def test_attention_with_relative_positions_cache(self):
+        attention = MultiheadAttention(4, 20, maximum_relative_position=6)
+        x = torch.rand([4, 1, 10])
+        cache = (torch.zeros([4, 4, 0, 5]), torch.zeros([4, 4, 0, 5]))
+        _, cache = attention(x, cache=cache)
 
 
 if __name__ == '__main__':
