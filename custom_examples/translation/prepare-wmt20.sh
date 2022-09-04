@@ -1,6 +1,6 @@
 #!/bin/bash
 CZENG=$1
-BUCKET_CRITERION=${2:-"tgt"}  # criterions: "tgt", "src", "both"
+BUCKET_CRITERION=${2:-"tgt"}
 
 WD=`pwd`
 
@@ -20,7 +20,6 @@ DETOKENIZER=$SCRIPTS/tokenizer/detokenizer.perl
 NORM_PUNC=$SCRIPTS/tokenizer/normalize-punctuation.perl
 REM_NON_PRINT_CHAR=$SCRIPTS/tokenizer/remove-non-printing-char.perl
 BPEROOT=$WD/subword-nmt/subword_nmt
-SENT_FILTER=$WD/../../my_scripts/filter_sentpairs_by_length.py
 
 SRC=en
 TGT=cs
@@ -107,7 +106,7 @@ for max_len in $BUCKETS; do
     echo "processing bucket length ${max_len}..."
     paste $OUTDIR/bpe.train.$SRC $OUTDIR/bpe.train.$TGT | \
         grep -v "^[^[:alnum:]]$" | \
-        $SENT_FILTER \
+        ~/scripts/filter_sentpairs_by_length.py \
             --min-length $min_len \
             --max-length $max_len \
             --field $BUCKET_CRITERION > $OUTDIR/bpe.$max_len.train
@@ -124,7 +123,7 @@ for max_len in $BUCKETS; do
     for t in "valid" "test"; do
         paste $OUTDIR/bpe.newstest.$t.$SRC $OUTDIR/bpe.newstest.$t.$TGT | \
             grep -v "^[^[:alnum:]]$" | \
-            $SENT_FILTER \
+            ~/scripts/filter_sentpairs_by_length.py \
                 --min-length $min_len \
                 --max-length $max_len \
                 --field $BUCKET_CRITERION > $OUTDIR/bpe.newstest.$max_len.$t

@@ -135,5 +135,6 @@ experimental/*
 .qsubmit*
 experiments/*
 examples/*
+custom_examples/*
 logs/*
 monitoring/*
