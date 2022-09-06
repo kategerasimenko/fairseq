@@ -255,7 +255,7 @@ for current_task in $TASKS; do
 #         sleep 15
 #         qstat | grep $jid > /dev/null || break
 #     done
-    cp $MODEL_DIR/checkpoints/checkpoint_last.pt \
+    cp $MODEL_DIR/checkpoints/checkpoint_best.pt \
         $MODEL_DIR/checkpoints/checkpoint_$current_task.pt
     ckpt_opt="--restore-file $MODEL_DIR/checkpoints/checkpoint_$current_task.pt"
     bash process_checklist.sh \
