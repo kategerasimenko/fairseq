@@ -81,14 +81,14 @@ shift
 done
 
 # CONSTANTS
-VIRTUALENV="/home/varis/python-virtualenv/fairseq-env/bin/activate"
+# VIRTUALENV="/home/varis/python-virtualenv/fairseq-env/bin/activate"
 CORES=4
 MEM="10g"
 GPUMEM="11g"
 GPUS=1
 
-TOKENIZER=mosesdecoder/scripts/tokenizer/tokenizer.perl
-DETOKENIZER=mosesdecoder/scripts/tokenizer/detokenizer.perl
+TOKENIZER=custom_examples/translation/mosesdecoder/scripts/tokenizer/tokenizer.perl
+DETOKENIZER=custom_examples/translation/mosesdecoder/scripts/tokenizer/detokenizer.perl
 
 TRANSLATION_OPT="-s $SRC -t $TGT --beam $BEAM_SIZE --lenpen $LENPEN --bpe subword_nmt --bpe-codes $EVAL_DIR/bpecodes $TRANSLATION_OPT"
 
@@ -122,16 +122,18 @@ function translate {
 
     outfile=$RESULTS_DIR/${_file}
 
-    cmd="source $VIRTUALENV"
-    cmd="$cmd && cat $EVAL_DIR/${_file}.$SRC | perl $TOKENIZER -a -l $SRC"
+    # cmd="source $VIRTUALENV"
+    # cmd="$cmd && cat $EVAL_DIR/${_file}.$SRC | perl $TOKENIZER -a -l $SRC"
+    cmd="cat $EVAL_DIR/${_file}.$SRC | perl $TOKENIZER -a -l $SRC"
     cmd="$cmd | wrappers/translate_wrapper_interactive.sh $_sys '_$CURRENT_TASK' $outfile '$TRANSLATION_OPT'"
     cmd="$cmd && mv $outfile.$CURRENT_TASK.txt $outfile.txt"
 
     [[ -e "$outfile.txt" ]] && exit 0
 
-    jid=`qsubmit --jobname=tr_len_eval --logdir=logs --gpus=$GPUS --gpumem=$GPUMEM --mem=$MEM --cores=$CORES --priority=$JOB_PRIORITY "$cmd"`
-    jid=`echo $jid | cut -d" " -f3`
-    echo $jid
+    # jid=`qsubmit --jobname=tr_len_eval --logdir=logs --gpus=$GPUS --gpumem=$GPUMEM --mem=$MEM --cores=$CORES --priority=$JOB_PRIORITY "$cmd"`
+    # jid=`echo $jid | cut -d" " -f3`
+    # echo $jid
+    echo $cmd
 }
 
 function process_files {
@@ -144,10 +146,11 @@ function process_files {
 
             jid=`translate $task.$len.$_dataset $EXP_DIR`
             msg "Waiting for job $jid..."
-            while true; do
-                sleep 20
-                qstat | grep $jid > /dev/null || break
-            done
+            eval "$jid" > /dev/null
+            # while true; do
+            #    sleep 20
+            #    qstat | grep $jid > /dev/null || break
+            # done
             evaluate $task.$len.$_dataset $EXP_DIR
         done
     done
