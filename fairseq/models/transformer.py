@@ -30,7 +30,6 @@ from fairseq.modules import (
 from fairseq.modules.quant_noise import quant_noise as apply_quant_noise_
 from torch import Tensor
 
-
 DEFAULT_MAX_SOURCE_POSITIONS = 1024
 DEFAULT_MAX_TARGET_POSITIONS = 1024
 
@@ -174,6 +173,11 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='scalar quantization noise and scalar quantization at training time')
         parser.add_argument('--maximum-relative-position', type=int, default=None,
                             help='maximum relative distance to consider for relative positional encoding')
+        parser.add_argument('--rnn_positional_embeddings', action='store_true',
+                            help='add an RNN layer before Transformer layers for token embeddings')
+        parser.add_argument('--rnn_hidden_size', type=int, default=512,
+                            help='hidden size for RNN layer used for token embeddings, '
+                                 'used only if rnn_positional_embeddings is set')
         # fmt: on
 
     @classmethod
@@ -325,16 +329,20 @@ class TransformerEncoder(FairseqEncoder):
 
         self.embed_scale = 1.0 if args.no_scale_embedding else math.sqrt(embed_dim)
 
-        self.embed_positions = (
-            PositionalEmbedding(
+        self.embed_positions, self.embed_positions_rnn = None, None
+        if args.rnn_positional_embeddings:
+            self.embed_positions_rnn = nn.GRU(embed_dim, args.rnn_hidden_size)
+            for name, param in self.embed_positions_rnn.named_parameters():
+                if 'weight' in name or 'bias' in name:
+                    param.data.uniform_(-0.1, 0.1)
+
+        elif not args.no_token_positional_embeddings:
+            self.embed_positions = PositionalEmbedding(
                 args.max_source_positions,
                 embed_dim,
                 self.padding_idx,
                 learned=args.encoder_learned_pos,
             )
-            if not args.no_token_positional_embeddings
-            else None
-        )
 
         if not args.adaptive_input and args.quant_noise_pq > 0:
             self.quant_noise = apply_quant_noise_(
@@ -370,13 +378,19 @@ class TransformerEncoder(FairseqEncoder):
     def forward_embedding(self, src_tokens):
         # embed tokens and positions
         x = embed = self.embed_scale * self.embed_tokens(src_tokens)
-        if self.embed_positions is not None:
+        if self.embed_positions_rnn is not None:
+            x, _ = self.embed_positions_rnn(embed)
+
+        elif self.embed_positions is not None:
             x = embed + self.embed_positions(src_tokens)
+
         if self.layernorm_embedding is not None:
             x = self.layernorm_embedding(x)
+
         x = F.dropout(x, p=self.dropout, training=self.training)
         if self.quant_noise is not None:
             x = self.quant_noise(x)
+
         return x, embed
 
     def forward(
@@ -572,16 +586,20 @@ class TransformerDecoder(FairseqIncrementalDecoder):
             else None
         )
 
-        self.embed_positions = (
-            PositionalEmbedding(
+        self.embed_positions, self.embed_positions_rnn = None, None
+        if args.rnn_positional_embeddings:
+            self.embed_positions_rnn = nn.GRU(embed_dim, args.rnn_hidden_size)
+            for name, param in self.embed_positions_rnn.named_parameters():
+                if 'weight' in name or 'bias' in name:
+                    param.data.uniform_(-0.1, 0.1)
+
+        elif not args.no_token_positional_embeddings:
+            self.embed_positions = PositionalEmbedding(
                 args.max_target_positions,
                 embed_dim,
                 self.padding_idx,
                 learned=args.decoder_learned_pos,
             )
-            if not args.no_token_positional_embeddings
-            else None
-        )
 
         if getattr(args, "layernorm_embedding", False):
             self.layernorm_embedding = LayerNorm(embed_dim)
@@ -710,14 +728,23 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         if alignment_layer is None:
             alignment_layer = self.num_layers - 1
 
+        embeddings = self.embed_tokens(prev_output_tokens)
+
         # embed positions
-        positions = (
-            self.embed_positions(
-                prev_output_tokens, incremental_state=incremental_state
+
+        rnn_embedding_states = None
+        if self.embed_positions_rnn is not None:
+            prev = incremental_state.get('rnn_embedding_states') if incremental_state is not None else None
+            embeddings, rnn_embedding_states = self.embed_positions_rnn(embeddings, prev)
+            positions = None
+
+        elif self.embed_positions is not None:
+            positions = self.embed_positions(
+                prev_output_tokens,
+                incremental_state=incremental_state
             )
-            if self.embed_positions is not None
-            else None
-        )
+        else:
+            positions = None
 
         if incremental_state is not None:
             prev_output_tokens = prev_output_tokens[:, -1:]
@@ -725,7 +752,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
                 positions = positions[:, -1:]
 
         # embed tokens and positions
-        x = self.embed_scale * self.embed_tokens(prev_output_tokens)
+        x = self.embed_scale * embeddings
 
         if self.quant_noise is not None:
             x = self.quant_noise(x)
@@ -802,6 +829,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
             "attn": [attn],
             "attn_weights": attn_weights,
             "inner_states": inner_states,
+            "rnn_embedding_states": rnn_embedding_states
         }
 
     def output_layer(self, features):
