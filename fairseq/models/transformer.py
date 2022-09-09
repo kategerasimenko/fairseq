@@ -173,7 +173,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='scalar quantization noise and scalar quantization at training time')
         parser.add_argument('--maximum-relative-position', type=int, default=None,
                             help='maximum relative distance to consider for relative positional encoding')
-        parser.add_argument('--rnn_positional_embeddings', action='store_true',
+        parser.add_argument('--rnn_positional_embeddings', default=False, action='store_true',
                             help='add an RNN layer before Transformer layers for token embeddings')
         parser.add_argument('--rnn_hidden_size', type=int, default=512,
                             help='hidden size for RNN layer used for token embeddings, '
