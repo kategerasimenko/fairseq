@@ -88,15 +88,15 @@ function evaluate {
     _file=$1
     _sys=$2
 
-    grep '^H' $_sys/$CURRENT_TASK.eval/$_file.txt \
+    grep '^H' $RESULTS_DIR/$_file.txt \
         | sed 's/^H\-//' \
         | sort -n -k 1 \
         | cut -f3 \
         | perl $DETOKENIZER -l $TGT \
         | sed "s/ - /-/g" \
-        > $_sys/$CURRENT_TASK.eval/$_file.hyps.detok.txt
+        > $RESULTS_DIR/$_file.hyps.detok.txt
     msg "Evaluating $_file.hyps.detok.txt..."
-    sacrebleu --input $_sys/$CURRENT_TASK.eval/$_file.hyps.detok.txt $EVAL_DIR/${_file}.$TGT > $_sys/$CURRENT_TASK.eval/${_file}.eval_out
+    sacrebleu --input $RESULTS_DIR/$_file.hyps.detok.txt $EVAL_DIR/${_file}.$TGT > $RESULTS_DIR/${_file}.eval_out
 }
 
 function translate {
@@ -104,13 +104,13 @@ function translate {
     _file=$1
     _sys=$2
 
-    outfile=$CURRENT_TASK.eval/${_file}
+    outfile=$RESULTS_DIR/${_file}
 
     # cmd="source $VIRTUALENV"
     # cmd="$cmd && cat $EVAL_DIR/${_file}.$SRC | perl $TOKENIZER -a -l $SRC"
     cmd="cat $EVAL_DIR/${_file}.$SRC | perl $TOKENIZER -a -l $SRC"
     cmd="$cmd | wrappers/translate_wrapper_interactive.sh $_sys '_$CURRENT_TASK' $outfile '$TRANSLATION_OPT'"
-    cmd="$cmd && mv $_sys/$outfile.$CURRENT_TASK.txt $_sys/$outfile.txt"
+    cmd="$cmd && mv $outfile.$CURRENT_TASK.txt $outfile.txt"
 
     [[ -e "$_sys/$outfile.txt" ]] && exit 0
 
@@ -140,5 +140,8 @@ function process_files {
     done
 }
 
-[[ -d "$EXP_DIR/$CURRENT_TASK.eval" ]] || mkdir $EXP_DIR/$CURRENT_TASK.eval
+RESULTS_DIR=$EXP_DIR/$CURRENT_TASK.eval
+[[ $OVERWRITE -eq 0 ]] && [[ -d $RESULTS_DIR ]] && rm -r $RESULTS_DIR
+[[ -d "$RESULTS_DIR" ]] || mkdir $RESULTS_DIR
+
 process_files $EVAL_DATASET $EVAL_DIR
