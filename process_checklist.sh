@@ -75,7 +75,7 @@ GPUS=1
 TOKENIZER=custom_examples/translation/mosesdecoder/scripts/tokenizer/tokenizer.perl
 DETOKENIZER=custom_examples/translation/mosesdecoder/scripts/tokenizer/detokenizer.perl
 
-TRANSLATION_OPT="-s $SRC -t $TGT --bpe subword_nmt --bpe-codes $EVAL_DIR/bpecodes $TRANSLATION_OPT"
+TRANSLATION_OPT="-s $SRC -t $TGT --beam 4 --lenpen 0.6 --bpe subword_nmt --bpe-codes $EVAL_DIR/bpecodes $TRANSLATION_OPT"
 
 # TODO print help
 
