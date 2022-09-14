@@ -9,7 +9,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from fairseq import utils
-from fairseq.modules import LayerNorm, MultiheadAttention
+from fairseq.modules import (
+    LayerNorm,
+    MultiheadAttention,
+    RelPositionMultiHeadedAttention,
+    RotaryPositionMultiHeadedAttention
+)
 from fairseq.modules.quant_noise import quant_noise
 from torch import Tensor
 

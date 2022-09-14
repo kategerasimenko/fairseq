@@ -37,6 +37,10 @@ from .transformer_modular_layer import (
     TransformerModularDecoderLayer
 )
 from .vggblock import VGGBlock
+from .relative_multihead_attention import (
+    RelPositionMultiHeadedAttention,
+    RotaryPositionMultiHeadedAttention
+)
 
 __all__ = [
     'AdaptiveInput',
@@ -76,4 +80,6 @@ __all__ = [
     'TransformerModularDecoderLayer',
     'VGGBlock',
     'unfold1d',
+    'RelPositionMultiHeadedAttention',
+    'RotaryPositionMultiHeadedAttention'
 ]
