@@ -749,6 +749,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
 
         if incremental_state is not None:
             prev_output_tokens = prev_output_tokens[:, -1:]
+            embeddings = embeddings[:, -1:]
             if positions is not None:
                 positions = positions[:, -1:]
 
