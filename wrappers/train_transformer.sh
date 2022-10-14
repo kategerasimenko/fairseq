@@ -18,6 +18,7 @@ FFN_SIZE=$(expr 4 \* $EMB_SIZE)
 ATT_HEADS=8
 DEPTH=6
 SHARED_DICT_OPT=
+ENCODING=
 
 # Training Reset
 INIT_CKPT=
@@ -152,6 +153,9 @@ case $key in
     --shared-dict)
         SHARED_DICT_OPT="--share-all-embeddings"
     ;;
+    --encoding)
+        ENCODING="$2"
+    ;;
     -h|--help)
         HELP=0
         shift
@@ -180,6 +184,7 @@ MODEL_DIR="$MODEL_DIR.att-heads-$ATT_HEADS"
 MODEL_DIR="$MODEL_DIR.depth-$DEPTH"
 MODEL_DIR="$MODEL_DIR.patience-$PATIENCE"
 MODEL_DIR="$MODEL_DIR.lr-$LR"
+MODEL_DIR="$MODEL_DIR.enc-$ENCODING"
 #MODEL_DIR="$MODEL_DIR.max-tokens-$MAX_TOKENS"
 [[ -z "$RESET_OPTIMIZER_OPT" ]] || MODEL_DIR="$MODEL_DIR.reset-optim"
 
@@ -245,8 +250,7 @@ for current_task in $TASKS; do
                 --decoder-layers $DEPTH \
                 --encoder-embed-dim $EMB_SIZE \
                 --encoder-ffn-embed-dim $FFN_SIZE \
-                --save-interval-updates $SAVE_EVERY_N_UPDATES \
-                --maximum-relative-position 16
+                --save-interval-updates $SAVE_EVERY_N_UPDATES
 #                 ")
 
 #     jid=`echo $jid | cut -d" " -f3`
@@ -259,7 +263,7 @@ for current_task in $TASKS; do
         $MODEL_DIR/checkpoints/checkpoint_$current_task.pt
     ckpt_opt="--restore-file $MODEL_DIR/checkpoints/checkpoint_$current_task.pt"
     bash process_checklist.sh \
-        -t $current_task \
+        -t "best" \
         --src $SRC \
         --tgt $TGT \
         --expdir $MODEL_DIR \
