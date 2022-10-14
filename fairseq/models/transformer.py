@@ -172,11 +172,13 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='block size of quantization noise at training time')
         parser.add_argument('--quant-noise-scalar', type=float, metavar='D', default=0,
                             help='scalar quantization noise and scalar quantization at training time')
+        # arg for relative positional encoding (Shaw et al., 2018)
         parser.add_argument('--maximum-relative-position', type=int, default=None,
                             help='maximum relative distance to consider for relative positional encoding')
-        parser.add_argument('--rnn_positional_embeddings', default=False, action='store_true',
+        # args for RNN positional encoding (Neishi and Yoshinaga, 2019)
+        parser.add_argument('--rnn-positional-embeddings', default=False, action='store_true',
                             help='add an RNN layer before Transformer layers for token embeddings')
-        parser.add_argument('--rnn_hidden_size', type=int, default=512,
+        parser.add_argument('--rnn-hidden-size', type=int, default=512,
                             help='hidden size for RNN layer used for token embeddings, '
                                  'used only if rnn_positional_embeddings is set')
         # fmt: on
