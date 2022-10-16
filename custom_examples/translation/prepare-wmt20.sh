@@ -10,8 +10,8 @@ git clone https://github.com/moses-smt/mosesdecoder.git
 echo 'Cloning Subword NMT repository (for BPE pre-processing)...'
 git clone https://github.com/rsennrich/subword-nmt.git
 
-echo 'Installing SacreBLEU (for newstest data download)'
-pip install sacrebleu
+echo 'Cloning SacreBLEU repository (for newstest data download)'
+git clone https://github.com/mjpost/sacrebleu.git
 
 SCRIPTS=$WD/mosesdecoder/scripts
 TOKENIZER=$SCRIPTS/tokenizer/tokenizer.perl
