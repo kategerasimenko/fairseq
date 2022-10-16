@@ -36,7 +36,7 @@ for encoding in "abs" "rel" "rnn"; do
             --emb-size 512 \
             --ffn-size 2048 \
             --att-heads 8 \
-            --patience 10 \
+            --patience 5 \
             --depth 6 \
             --eval-dir custom_examples/translation/wmt20_encs.tgt \
             --tasks "czeng.$i" \
