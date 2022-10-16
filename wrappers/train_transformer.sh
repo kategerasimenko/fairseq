@@ -204,16 +204,16 @@ epochs=$EPOCHS
 valid_sets=`echo $VALID_TASKS | sed 's/ /.valid,/g;s/$/.valid/'`
 for current_task in $TASKS; do
     echo Training $current_task...
-#     jid=$(qsubmit \
-#         --queue="gpu-troja.q" \
-#         --logdir=$MODEL_DIR/logs \
-#         --jobname=$current_task.train \
-#         --mem=25g \
-#         --cores=4 \
-#         --gpumem=$GPUMEM \
-#         --priority=$JOB_PRIORITY \
-#         --gpus=1 "source $HOME/python-virtualenv/fairseq-env/bin/activate && \
-#             export CUDA_LAUNCH_BLOCKING=1 && \
+    jid=$(qsubmit \
+        --queue="gpu-troja.q" \
+        --logdir=$MODEL_DIR/logs \
+        --jobname=$current_task.train \
+        --mem=25g \
+        --cores=4 \
+        --gpumem=$GPUMEM \
+        --priority=$JOB_PRIORITY \
+        --gpus=1 "source $HOME/python-virtualenv/fairseq-env/bin/activate && \
+            export CUDA_LAUNCH_BLOCKING=1 && \
             python train.py \
                 $EXPDIR/data \
                 -s $SRC \
@@ -241,7 +241,7 @@ for current_task in $TASKS; do
                 --label-smoothing $LABEL_SMOOTHING \
                 --max-tokens $MAX_TOKENS \
                 --eval-bleu \
-                --eval-bleu-args '{"beam":'$VALID_BEAM_SIZE',"max_len_a":'$VALID_MAX_LEN_A',"max_len_b":'$VALID_MAX_LEN_B',"lenpen":'$VALID_LENPEN'}' \
+                --eval-bleu-args '{\"beam\": $VALID_BEAM_SIZE, \"max_len_a\": $VALID_MAX_LEN_A, \"max_len_b\": $VALID_MAX_LEN_B, \"lenpen\": $VALID_LENPEN}' \
                 --eval-bleu-detok moses \
                 --eval-bleu-remove-bpe \
                 --eval-bleu-print-samples \
@@ -258,14 +258,15 @@ for current_task in $TASKS; do
                 --encoder-ffn-embed-dim $FFN_SIZE \
                 --save-interval-updates $SAVE_EVERY_N_UPDATES \
                 $REL_OPT_SET
-#                 ")
+                 ")
 
-#     jid=`echo $jid | cut -d" " -f3`
-#     echo Waiting for $jid...
-#     while true; do
-#         sleep 15
-#         qstat | grep $jid > /dev/null || break
-#     done
+    jid=`echo $jid | cut -d" " -f3`
+    echo Waiting for $jid...
+    while true; do
+        sleep 15
+        qstat | grep $jid > /dev/null || break
+    done
+
     cp $MODEL_DIR/checkpoints/checkpoint_best.pt \
         $MODEL_DIR/checkpoints/checkpoint_$current_task.pt
     ckpt_opt="--restore-file $MODEL_DIR/checkpoints/checkpoint_$current_task.pt"
