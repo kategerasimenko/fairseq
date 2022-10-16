@@ -44,7 +44,7 @@ for encoding in "abs" "rel" "rnn"; do
             --shared-dict \
             --clip-norm 1.0 \
             --encoding $encoding \
-            $REL_OPT_SET
+            --rel_opts $REL_OPT_SET
     done
 
 done

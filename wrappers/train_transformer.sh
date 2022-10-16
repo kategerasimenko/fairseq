@@ -19,6 +19,7 @@ ATT_HEADS=8
 DEPTH=6
 SHARED_DICT_OPT=
 ENCODING=
+REL_OPT_SET=
 
 # Training Reset
 INIT_CKPT=
@@ -156,6 +157,9 @@ case $key in
     --encoding)
         ENCODING="$2"
     ;;
+    --rel_opts)
+        REL_OPT_SET="$2"
+    ;;
     -h|--help)
         HELP=0
         shift
@@ -250,7 +254,8 @@ for current_task in $TASKS; do
                 --decoder-layers $DEPTH \
                 --encoder-embed-dim $EMB_SIZE \
                 --encoder-ffn-embed-dim $FFN_SIZE \
-                --save-interval-updates $SAVE_EVERY_N_UPDATES
+                --save-interval-updates $SAVE_EVERY_N_UPDATES \
+                $REL_OPT_SET
 #                 ")
 
 #     jid=`echo $jid | cut -d" " -f3`
