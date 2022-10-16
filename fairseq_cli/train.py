@@ -123,8 +123,8 @@ def main(args, init_distributed=False):
         and epoch_itr.next_epoch_idx <= max_epoch
     ):
         # train for one epoch
-        valid_losses = train(args, trainer, task, epoch_itr, max_update)
-        if should_stop_early(args, valid_losses[0]) or trainer.get_num_updates() >= max_update:
+        valid_losses, stopped_early = train(args, trainer, task, epoch_itr, max_update)
+        if stopped_early:
             break
 
         # only use first validation loss to update the learning rate
@@ -180,6 +180,7 @@ def tpu_data_loader(args, itr):
 def train(args, trainer, task, epoch_itr, max_update=math.inf):
     """Train the model for one epoch and return validation losses."""
     # Initialize data iterator
+    stopped_early = False
     itr = epoch_itr.next_epoch_itr(
         fix_batches_to_gpus=args.fix_batches_to_gpus,
         shuffle=(epoch_itr.next_epoch_idx > args.curriculum),
@@ -229,6 +230,7 @@ def train(args, trainer, task, epoch_itr, max_update=math.inf):
             args, trainer, task, epoch_itr, valid_subsets, end_of_epoch
         )
         if should_stop_early(args, valid_losses[0]) or num_updates >= max_update:
+            stopped_early = True
             break
 
     # log end-of-epoch stats
@@ -237,7 +239,7 @@ def train(args, trainer, task, epoch_itr, max_update=math.inf):
 
     # reset epoch-level meters
     metrics.reset_meters('train')
-    return valid_losses
+    return valid_losses, stopped_early
 
 
 def validate_and_save(args, trainer, task, epoch_itr, valid_subsets, end_of_epoch):
