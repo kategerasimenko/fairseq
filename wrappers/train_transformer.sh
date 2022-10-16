@@ -148,17 +148,19 @@ case $key in
         INIT_CKPT="$2"
         shift
     ;;
+    --encoding)
+        ENCODING="$2"
+        shift
+    ;;
+    --rel_opts)
+        REL_OPT_SET="$2"
+        shift
+    ;;
     --reset-optimizer)
         RESET_OPTIMIZER_OPT="--reset-optimizer"
     ;;
     --shared-dict)
         SHARED_DICT_OPT="--share-all-embeddings"
-    ;;
-    --encoding)
-        ENCODING="$2"
-    ;;
-    --rel_opts)
-        REL_OPT_SET="$2"
     ;;
     -h|--help)
         HELP=0

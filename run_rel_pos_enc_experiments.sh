@@ -24,9 +24,9 @@ NO_ABS_OPT="--no-token-positional-embeddings"
 
 for encoding in "abs" "rel" "rnn"; do
     REL_OPT_SET=
-    case encoding in
-      rel) REL_OPT_SET=REL_OPT + " " + NO_ABS_OPT;;
-      rnn) REL_OPT_SET=REL_OPT + " " + RNN_OPT;;
+    case $encoding in
+      rel) REL_OPT_SET="$REL_OPT $NO_ABS_OPT";;
+      rnn) REL_OPT_SET="$REL_OPT $RNN_OPT";;
     esac
 
     for i in 30 60; do
@@ -44,7 +44,7 @@ for encoding in "abs" "rel" "rnn"; do
             --shared-dict \
             --clip-norm 1.0 \
             --encoding $encoding \
-            --rel_opts $REL_OPT_SET
+            --rel_opts "$REL_OPT_SET"
     done
 
 done
